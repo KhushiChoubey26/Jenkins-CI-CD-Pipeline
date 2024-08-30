@@ -8,7 +8,7 @@ pipeline {
     stages {
         stage('Build') {
             steps {
-                scrpit {
+                script {
                 echo 'Building the code... using Maven to compile and package the code'
                 echo "Tool: Maven"
             }
