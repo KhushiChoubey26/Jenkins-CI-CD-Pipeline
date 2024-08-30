@@ -1,66 +1,103 @@
 pipeline {
     agent any
-    
+
+    environment {
+        EMAIL_RECIPIENT = 'your-email@example.com'
+    }
+
     stages {
         stage('Build') {
             steps {
-                echo 'Building...'
-                // Use Maven or another build tool here
+                script {
+                    echo 'Building the code...'
+                    // Use a build tool appropriate for your project
+                    // Example for Java with Maven:
+                    sh 'mvn clean package'
+                }
             }
         }
+        
         stage('Unit and Integration Tests') {
             steps {
-                echo 'Running Unit and Integration Tests...'
-                // Use JUnit or another testing tool here
+                script {
+                    echo 'Running unit and integration tests...'
+                    // Use a testing tool appropriate for your project
+                    // Example for Java with JUnit:
+                    sh 'mvn test'
+                }
             }
         }
+        
         stage('Code Analysis') {
             steps {
-                echo 'Performing Code Analysis...'
-                // Use SonarQube or another code analysis tool here
+                script {
+                    echo 'Performing code analysis...'
+                    // Use a code analysis tool appropriate for your project
+                    // Example for Java with SonarQube:
+                    sh 'sonar-scanner'
+                }
             }
         }
+        
         stage('Security Scan') {
             steps {
-                echo 'Performing Security Scan...'
-                // Use OWASP ZAP or another security scanning tool here
+                script {
+                    echo 'Performing security scan...'
+                    // Use a security scan tool appropriate for your project
+                    // Example for Java with OWASP Dependency-Check:
+                    sh 'dependency-check.sh'
+                }
             }
         }
+        
         stage('Deploy to Staging') {
             steps {
-                echo 'Deploying to Staging...'
-                // Deploy to AWS EC2 or another staging server here
+                script {
+                    echo 'Deploying to staging environment...'
+                    // Use a deployment tool appropriate for your project
+                    // Example for AWS EC2:
+                    sh 'deploy-to-staging.sh'
+                }
             }
         }
+        
         stage('Integration Tests on Staging') {
             steps {
-                echo 'Running Integration Tests on Staging...'
-                // Perform integration testing on staging environment
+                script {
+                    echo 'Running integration tests on staging environment...'
+                    // Use integration test tools appropriate for your project
+                    // Example for end-to-end testing:
+                    sh 'integration-tests.sh'
+                }
             }
         }
+        
         stage('Deploy to Production') {
             steps {
-                echo 'Deploying to Production...'
-                // Deploy to AWS EC2 or another production server here
+                script {
+                    echo 'Deploying to production environment...'
+                    // Use a deployment tool appropriate for your project
+                    // Example for AWS EC2:
+                    sh 'deploy-to-production.sh'
+                }
             }
         }
     }
-    
+
     post {
-        always {
-            echo 'Pipeline finished'
+        success {
+            mail to: "${EMAIL_RECIPIENT}",
+                 subject: "Pipeline Success: Build #${env.BUILD_NUMBER}",
+                 body: "The build was successful. Check the build details here: ${env.BUILD_URL}"
         }
         failure {
-            mail to: 'developer@example.com',
-                 subject: "Pipeline Failed: ${currentBuild.fullDisplayName}",
-                 body: "Pipeline failed at stage ${env.STAGE_NAME}.\n\nCheck Jenkins for more details.",
-                 attachLog: true
+            mail to: "${EMAIL_RECIPIENT}",
+                 subject: "Pipeline Failure: Build #${env.BUILD_NUMBER}",
+                 body: "The build failed. Check the build details here: ${env.BUILD_URL}. Logs:\n\n${env.BUILD_URL}console"
         }
-        success {
-            mail to: 'developer@example.com',
-                 subject: "Pipeline Succeeded: ${currentBuild.fullDisplayName}",
-                 body: "Pipeline completed successfully.",
-                 attachLog: true
+        always {
+            echo 'Pipeline execution completed.'
         }
     }
 }
+
