@@ -61,7 +61,7 @@ pipeline {
                         writeFile file: logFile, text: currentBuild.rawBuild.getLog(1000).join("\n")
                         archiveArtifacts artifacts: logFile, allowEmptyArchive: true
                         emailext(
-                            to: EMAIL_RECIPIENT,
+                            to: 'choubeykhushi029@gmail.com',
                             subject: "Security Scan Completed: ${currentBuild.fullDisplayName}",
                             body: "The Security Scan stage has completed. Logs are attached.",
                             attachmentsPattern: logFile
@@ -103,7 +103,7 @@ pipeline {
         always {
             echo "Pipeline execution completed."
             emailext(
-                to: EMAIL_RECIPIENT,
+                to: 'choubeykhushi029@gmail.com',
                 subject: "Pipeline ${currentBuild.result}: ${currentBuild.fullDisplayName}",
                 body: "The pipeline status is ${currentBuild.result}. The Jenkins console logs are attached.",
             )
