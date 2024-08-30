@@ -25,10 +25,11 @@ pipeline {
             post {
                 always {
                     script {
+                        def log = currentBuild.getLog(1000).join("\n")
                         def lFile = 'test.txt'
-                        writeFile file: lFile, text: currentBuild.rawBuild.getLog(1000).join("\n")
+                        writeFile file: lFile, text: log
                         archiveArtifacts artifacts: lFile, allowEmptyArchive: true
-                         emailext(
+                        emailext(
                             to: 'choubeykhushi029@gmail.com',
                             subject: "Tests have Succeeded: ${currentBuild.fullDisplayName}",
                             body: "The tests stage has succeeded. Logs are attached.",
@@ -39,12 +40,10 @@ pipeline {
             }
         }
         
-        
-        
         stage('Code Analysis') {
             steps {
                 script {
-                    echo 'Performing code analysis... with SonarQuba'
+                    echo 'Performing code analysis... with SonarQube'
                     echo "Running sonar-scanner"
                 }
             }
@@ -60,8 +59,9 @@ pipeline {
             post {
                 always {
                     script {
+                        def log = currentBuild.getLog(1000).join("\n")
                         def logFile = 'scan.txt'
-                        writeFile file: logFile, text: currentBuild.rawBuild.getLog(1000).join("\n")
+                        writeFile file: logFile, text: log
                         archiveArtifacts artifacts: logFile, allowEmptyArchive: true
                         emailext(
                             to: 'choubeykhushi029@gmail.com',
@@ -78,7 +78,7 @@ pipeline {
             steps {
                 script {
                     echo 'Deploying to staging environment..to AWS EC2 instance.'
-                    echo "Running deploy-to-staging. using tool AWS CLI"
+                    echo "Running deploy-to-staging using tool AWS CLI"
                 }
             }
         }
@@ -96,7 +96,7 @@ pipeline {
             steps {
                 script {
                     echo 'Deploying to production environment...'
-                    echo "Running deploy-to-production using tool Ansiblr"
+                    echo "Running deploy-to-production using tool Ansible"
                 }
             }
         }
@@ -104,11 +104,12 @@ pipeline {
     
     post {
         always {
-            echo "Pipeline execution completed."
-            mail to: 'choubeykhushi029@gmail.com',
-                 subject: "Pipeline : ${currentBuild.result}: ${currentBuild.fullDisplayName}",
-                 body: "The pipeline status is ${currentBuild.result}. Attached the Jenkins console for details.\n.\n. ${currentBuild.rawBuild.getLog(1000).join("\n")}"
-            
+            script {
+                def log = currentBuild.getLog(1000).join("\n")
+                mail to: 'choubeykhushi029@gmail.com',
+                     subject: "Pipeline : ${currentBuild.result}: ${currentBuild.fullDisplayName}",
+                     body: "The pipeline status is ${currentBuild.result}. Attached the Jenkins console for details.\n\n${log}"
+            }
         }
     }
 }
