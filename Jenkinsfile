@@ -22,15 +22,14 @@ pipeline {
                     echo "Running mvn test using tools Junit and SureFire"
                 }
             }
-        }
-        post {
+            post {
                 always {
                     script {
                         def lFile = 'test.txt'
                         writeFile file: lFile, text: currentBuild.rawBuild.getLog(1000).join("\n")
                         archiveArtifacts artifacts: lFile, allowEmptyArchive: true
                          emailext(
-                            to: 'qwertyorg2@gmail.com',
+                            to: 'choubeykhushi029@gmail.com',
                             subject: "Tests have Succeeded: ${currentBuild.fullDisplayName}",
                             body: "The tests stage has succeeded. Logs are attached.",
                             attachmentsPattern: lFile
@@ -58,15 +57,14 @@ pipeline {
                     echo "Running dependency-check.sh"
                 }
             }
-        }
-        post {
+            post {
                 always {
                     script {
                         def logFile = 'scan.txt'
                         writeFile file: logFile, text: currentBuild.rawBuild.getLog(1000).join("\n")
                         archiveArtifacts artifacts: logFile, allowEmptyArchive: true
                         emailext(
-                            to: 'qwertyorg2@gmail.com',
+                            to: 'choubeykhushi029@gmail.com',
                             subject: "Security Scan Succeeded: ${currentBuild.fullDisplayName}",
                             body: "The Security Scan stage has succeeded. Logs are attached.",
                             attachmentsPattern: logFile
@@ -75,8 +73,6 @@ pipeline {
                 }
             }
         }
-        
-    
         
         stage('Deploy to Staging') {
             steps {
@@ -105,6 +101,7 @@ pipeline {
             }
         }
     }
+    
     post {
         always {
             echo "Pipeline execution completed."
