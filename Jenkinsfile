@@ -8,95 +8,85 @@ pipeline {
     stages {
         stage('Build') {
             steps {
-                script {
-                    echo 'Building the code...'
-                    // Use a build tool appropriate for your project
-                    // Example for Java with Maven:
-                    echo "Running mvn clean package"
-                }
+                echo 'Building the code... using Maven to compile and package the code'
             }
         }
         
         stage('Unit and Integration Tests') {
             steps {
-                script {
-                    echo 'Running unit and integration tests...'
-                    // Use a testing tool appropriate for your project
-                    // Example for Java with JUnit:
-                    echo "Running mvn test"
+                echo 'Running unit and integration tests...Running tests using JUnit and Maven'
+            }
+            post {
+                always {
+                    script {
+                        def logFile = 'test-log.txt'
+                        writeFile file: logFile, text: currentBuild.rawBuild.getLog(1000).join("\n")
+                        archiveArtifacts artifacts: logFile, allowEmptyArchive: true
+                        emailext(
+                            to: EMAIL_RECIPIENT,
+                            subject: "Tests Completed: ${currentBuild.fullDisplayName}",
+                            body: "The Unit and Integration Tests stage has completed. Logs are attached.",
+                            attachmentsPattern: logFile
+                        )
+                    }
                 }
             }
         }
         
         stage('Code Analysis') {
             steps {
-                script {
-                    echo 'Performing code analysis...'
-                    // Use a code analysis tool appropriate for your project
-                    // Example for Java with SonarQube:
-                    echo "Running sonar-scanner"
-                }
+                echo 'Performing code analysis with SonarQube...'
             }
         }
         
         stage('Security Scan') {
             steps {
-                script {
-                    echo 'Performing security scan...'
-                    // Use a security scan tool appropriate for your project
-                    // Example for Java with OWASP Dependency-Check:
-                    echo "Running dependency-check.sh"
+                echo 'Performing security scan with OWASP Dependency-Check...'
+            }
+            post {
+                always {
+                    script {
+                        def logFile = 'security-scan-log.txt'
+                        writeFile file: logFile, text: currentBuild.rawBuild.getLog(1000).join("\n")
+                        archiveArtifacts artifacts: logFile, allowEmptyArchive: true
+                        emailext(
+                            to: EMAIL_RECIPIENT,
+                            subject: "Security Scan Completed: ${currentBuild.fullDisplayName}",
+                            body: "The Security Scan stage has completed. Logs are attached.",
+                            attachmentsPattern: logFile
+                        )
+                    }
                 }
             }
         }
         
         stage('Deploy to Staging') {
             steps {
-                script {
-                    echo 'Deploying to staging environment...'
-                    // Use a deployment tool appropriate for your project
-                    // Example for AWS EC2:
-                    echo "Running deploy-to-staging.sh"
-                }
+                echo 'Deploying to staging environment on AWS EC2 instance...'
             }
         }
         
         stage('Integration Tests on Staging') {
             steps {
-                script {
-                    echo 'Running integration tests on staging environment...'
-                    // Use integration test tools appropriate for your project
-                    // Example for end-to-end testing:
-                    echo "Running integration-tests.sh"
-                }
+                echo 'Running integration tests on staging environment...'
             }
         }
         
         stage('Deploy to Production') {
             steps {
-                script {
-                    echo 'Deploying to production environment...'
-                    // Use a deployment tool appropriate for your project
-                    // Example for AWS EC2:
-                    echo "Running deploy-to-production.sh"
-                }
+                echo 'Deploying to production environment...'
             }
         }
     }
-
+    
     post {
-        success {
-            mail to: "${EMAIL_RECIPIENT}",
-                 subject: "Pipeline Success: Build #${env.BUILD_NUMBER}",
-                 body: "The build was successful. Check the build details here: ${env.BUILD_URL}"
-        }
-        failure {
-            mail to: "${EMAIL_RECIPIENT}",
-                 subject: "Pipeline Failure: Build #${env.BUILD_NUMBER}",
-                 body: "The build failed. Check the build details here: ${env.BUILD_URL}. Logs:\n\n${env.BUILD_URL}console"
-        }
         always {
             echo "Pipeline execution completed."
+            emailext(
+                to: EMAIL_RECIPIENT,
+                subject: "Pipeline ${currentBuild.result}: ${currentBuild.fullDisplayName}",
+                body: "The pipeline status is ${currentBuild.result}. The Jenkins console logs are attached.",
+            )
         }
     }
 }
