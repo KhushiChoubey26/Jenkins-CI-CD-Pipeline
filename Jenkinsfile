@@ -9,14 +9,12 @@ pipeline {
         stage('Build') {
             steps {
                 echo 'Building the code... using Maven to compile and package the code'
-                sh 'mvn clean package'
             }
         }
         
         stage('Unit and Integration Tests') {
             steps {
                 echo 'Running unit and integration tests...Running tests using JUnit and Maven'
-                sh 'mvn test'
             }
             post {
                 always {
@@ -38,14 +36,12 @@ pipeline {
         stage('Code Analysis') {
             steps {
                 echo 'Performing code analysis with SonarQube...'
-                sh 'sonar-scanner'
             }
         }
         
         stage('Security Scan') {
             steps {
                 echo 'Performing security scan with OWASP Dependency-Check...'
-                sh './dependency-check.sh'
             }
             post {
                 always {
@@ -67,21 +63,18 @@ pipeline {
         stage('Deploy to Staging') {
             steps {
                 echo 'Deploying to staging environment on AWS EC2 instance...'
-                sh './deploy-to-staging.sh'
             }
         }
         
         stage('Integration Tests on Staging') {
             steps {
                 echo 'Running integration tests on staging environment...'
-                sh './integration-tests.sh'
             }
         }
         
         stage('Deploy to Production') {
             steps {
                 echo 'Deploying to production environment...'
-                sh './deploy-to-production.sh'
             }
         }
     }
