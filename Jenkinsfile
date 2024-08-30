@@ -93,7 +93,6 @@ pipeline {
                 to: EMAIL_RECIPIENT,
                 subject: "Pipeline ${currentBuild.result}: ${currentBuild.fullDisplayName}",
                 body: "The pipeline status is ${currentBuild.result}. The Jenkins console logs are attached.",
-                attachmentsPattern: '**/*.txt'
             )
         }
     }
