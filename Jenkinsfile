@@ -8,18 +8,23 @@ pipeline {
     stages {
         stage('Build') {
             steps {
+                scrpit {
                 echo 'Building the code... using Maven to compile and package the code'
+                echo "Tool: Maven"
             }
         }
-        
-        stage('Unit and Integration Tests') {
+    }
+    stage('Unit and Integration Tests') {
             steps {
+                script {
                 echo 'Running unit and integration tests...Running tests using JUnit and Maven'
+                echo "Tools: JUnit and SureFire"
             }
-            post {
-                always {
-                    script {
-                        def logFile = 'test-log.txt'
+        }
+        post {
+            always {
+                script {
+                    def logFile = 'test-log.txt'
                         writeFile file: logFile, text: currentBuild.rawBuild.getLog(1000).join("\n")
                         archiveArtifacts artifacts: logFile, allowEmptyArchive: true
                         emailext(
@@ -35,13 +40,19 @@ pipeline {
         
         stage('Code Analysis') {
             steps {
-                echo 'Performing code analysis with SonarQube...'
+                script {
+                    echo 'Performing code analysis with SonarQube...'
+                    echo "Tool: SonarQube"
+                }
             }
         }
         
         stage('Security Scan') {
             steps {
-                echo 'Performing security scan with OWASP Dependency-Check...'
+                script {
+                    echo 'Performing security scan with OWASP Dependency-Check...'
+                    echo "Tool: OWASP ASST (Automated Software Security Toolkit)"
+                }
             }
             post {
                 always {
@@ -62,19 +73,28 @@ pipeline {
         
         stage('Deploy to Staging') {
             steps {
-                echo 'Deploying to staging environment on AWS EC2 instance...'
+                script {
+                    echo 'Deploying to staging environment on AWS EC2 instance...'
+                    echo "Tool: AWS CLI"
+                }
             }
         }
         
         stage('Integration Tests on Staging') {
             steps {
-                echo 'Running integration tests on staging environment...'
+                script {
+                    echo 'Running integration tests on staging environment...'
+                    echo "Tools: Mockit and Junit"
+                }
             }
         }
         
         stage('Deploy to Production') {
             steps {
-                echo 'Deploying to production environment...'
+                script {
+                    echo 'Deploying to production environment...'
+                    echo "Tool: Ansible"
+                }
             }
         }
     }
