@@ -8,32 +8,27 @@ pipeline {
     stages {
         stage('Build') {
             steps {
-                script {
-                    echo 'Building the code... using Maven to compile and package the code'
-                    echo "Running mvn clean package"
-                }
+                echo 'Building the code... using Maven to compile and package the code'
+                sh 'mvn clean package'
             }
         }
         
         stage('Unit and Integration Tests') {
             steps {
-                script {
-                    echo 'Running unit and integration tests...Running test using Junit and Maven'
-                    echo "Running mvn test using tools Junit and SureFire"
-                }
+                echo 'Running unit and integration tests...Running tests using JUnit and Maven'
+                sh 'mvn test'
             }
             post {
                 always {
                     script {
-                        def log = currentBuild.getLog(1000).join("\n")
-                        def lFile = 'test.txt'
-                        writeFile file: lFile, text: log
-                        archiveArtifacts artifacts: lFile, allowEmptyArchive: true
+                        def logFile = 'test-log.txt'
+                        writeFile file: logFile, text: currentBuild.rawBuild.getLog(1000).join("\n")
+                        archiveArtifacts artifacts: logFile, allowEmptyArchive: true
                         emailext(
-                            to: 'choubeykhushi029@gmail.com',
-                            subject: "Tests have Succeeded: ${currentBuild.fullDisplayName}",
-                            body: "The tests stage has succeeded. Logs are attached.",
-                            attachmentsPattern: lFile
+                            to: EMAIL_RECIPIENT,
+                            subject: "Tests Completed: ${currentBuild.fullDisplayName}",
+                            body: "The Unit and Integration Tests stage has completed. Logs are attached.",
+                            attachmentsPattern: logFile
                         )
                     }
                 }
@@ -42,31 +37,26 @@ pipeline {
         
         stage('Code Analysis') {
             steps {
-                script {
-                    echo 'Performing code analysis... with SonarQube'
-                    echo "Running sonar-scanner"
-                }
+                echo 'Performing code analysis with SonarQube...'
+                sh 'sonar-scanner'
             }
         }
         
         stage('Security Scan') {
             steps {
-                script {
-                    echo 'Performing security scan...Performing Security scan with OWASP Dependency-Check '
-                    echo "Running dependency-check.sh"
-                }
+                echo 'Performing security scan with OWASP Dependency-Check...'
+                sh './dependency-check.sh'
             }
             post {
                 always {
                     script {
-                        def log = currentBuild.getLog(1000).join("\n")
-                        def logFile = 'scan.txt'
-                        writeFile file: logFile, text: log
+                        def logFile = 'security-scan-log.txt'
+                        writeFile file: logFile, text: currentBuild.rawBuild.getLog(1000).join("\n")
                         archiveArtifacts artifacts: logFile, allowEmptyArchive: true
                         emailext(
-                            to: 'choubeykhushi029@gmail.com',
-                            subject: "Security Scan Succeeded: ${currentBuild.fullDisplayName}",
-                            body: "The Security Scan stage has succeeded. Logs are attached.",
+                            to: EMAIL_RECIPIENT,
+                            subject: "Security Scan Completed: ${currentBuild.fullDisplayName}",
+                            body: "The Security Scan stage has completed. Logs are attached.",
                             attachmentsPattern: logFile
                         )
                     }
@@ -76,40 +66,35 @@ pipeline {
         
         stage('Deploy to Staging') {
             steps {
-                script {
-                    echo 'Deploying to staging environment..to AWS EC2 instance.'
-                    echo "Running deploy-to-staging using tool AWS CLI"
-                }
+                echo 'Deploying to staging environment on AWS EC2 instance...'
+                sh './deploy-to-staging.sh'
             }
         }
         
         stage('Integration Tests on Staging') {
             steps {
-                script {
-                    echo 'Running integration tests on staging environment...'
-                    echo "Running integration-tests using Mockint and Junit"
-                }
+                echo 'Running integration tests on staging environment...'
+                sh './integration-tests.sh'
             }
         }
         
         stage('Deploy to Production') {
             steps {
-                script {
-                    echo 'Deploying to production environment...'
-                    echo "Running deploy-to-production using tool Ansible"
-                }
+                echo 'Deploying to production environment...'
+                sh './deploy-to-production.sh'
             }
         }
     }
     
     post {
         always {
-            script {
-                def log = currentBuild.getLog(1000).join("\n")
-                mail to: 'choubeykhushi029@gmail.com',
-                     subject: "Pipeline : ${currentBuild.result}: ${currentBuild.fullDisplayName}",
-                     body: "The pipeline status is ${currentBuild.result}. Attached the Jenkins console for details.\n\n${log}"
-            }
+            echo "Pipeline execution completed."
+            emailext(
+                to: EMAIL_RECIPIENT,
+                subject: "Pipeline ${currentBuild.result}: ${currentBuild.fullDisplayName}",
+                body: "The pipeline status is ${currentBuild.result}. The Jenkins console logs are attached.",
+                attachmentsPattern: '**/*.txt'
+            )
         }
     }
 }
